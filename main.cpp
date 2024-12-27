@@ -1,168 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <array>
+#include <tuple>
+#include "heap_sorter/heap_sorter.hpp"
 
 #define MIN_VAL (0)
-#define MAX_VAL (15)
+#define MAX_VAL (1023)
+#define A_SIZE (50)
+#define B_SIZE (100)
+#define C_SIZE (200)
+#define MIN_NUM_CHILDREN (2)
+#define MAX_NUM_CHILDREN (5)
 
-size_t num_comparisons = 0;
-size_t num_copies = 0;
 
-template<size_t HeapArraySize>
-class HeapSorter
-{
-public:
-    HeapSorter(size_t num_of_children, size_t unordered_heap_array[HeapArraySize]) : _num_of_children(num_of_children), _heap_array(unordered_heap_array)
-    {
-        update_max_parent_index();
-    }
-
-    void max_heapify(size_t index)
-    {
-        size_t largest_child_index = this->get_index_of_largest_child(index);
-
-        if (this->_heap_array[largest_child_index] > this->_heap_array[index])
-        {
-            this->swap_values(index, largest_child_index);
-            this->max_heapify(largest_child_index);
-        }
-    }
-
-    void build_max_heap()
-    {
-        // int and not size_t so the loop can stop after 0, in size_t it will reach around to MAX_UINT and loop forever...
-        for (int current_parent_index = this->_max_parent_index; current_parent_index >= 0; current_parent_index--)
-        {
-            max_heapify(current_parent_index);
-        }
-
-        if (this->verify_max_heap())
-        {
-            printf("yay!\n");
-        }
-    }
-
-    void heap_sort()
-    {
-        printf("g");
-    }
-
-    void set_num_of_children(size_t new_num_of_children)
-    {
-        this->_num_of_children = new_num_of_children;
-        this->update_max_parent_index();
-    }
-
-    void print_heap()
-    {
-        for (size_t index = 0; index < HeapArraySize; index++)
-        {
-            printf("%zu ", this->_heap_array[index]);
-        }
-        printf("\n");
-    }
-
-private:
-    void swap_values(size_t first_index, size_t second_index)
-    {
-        if (first_index > HeapArraySize - 1 || second_index > HeapArraySize - 1)
-        {
-            printf("weird swap indexes %zu %zu\n", first_index, second_index);
-            return;
-        }
-
-        size_t temp = this->_heap_array[first_index];
-        this->_heap_array[first_index] = _heap_array[second_index];
-        this->_heap_array[second_index] = temp;
-    }
-
-    size_t get_left_child_index(size_t parent_index)
-    {
-        if (parent_index > this->_max_parent_index)
-        {
-            return parent_index;
-        }
-
-        return parent_index * this->_num_of_children + 1;
-    }
-
-    size_t get_parent_index(size_t child_index)
-    {
-        if (child_index == 0)
-        {
-            printf("weird child index %zu\n", child_index);
-            return 0;
-        }
-
-        return (child_index - 1) / this->_num_of_children;
-    }
-
-    size_t get_index_of_largest_child(size_t parent_index)
-    {
-        if (parent_index > this->_max_parent_index)
-        {
-            // printf("2weird parent index %zu\n", parent_index);
-            return parent_index;
-        }
-
-        size_t left_child_index = this->get_left_child_index(parent_index);
-        size_t right_child_index = left_child_index + this->_num_of_children - 1;
-        if (right_child_index > HeapArraySize - 1)
-        {
-            right_child_index = HeapArraySize - 1;
-        }
-
-        size_t largest_child_index = left_child_index;
-
-        for (size_t current_child_index = left_child_index + 1; current_child_index < right_child_index + 1; current_child_index++)
-        {
-            if (this->_heap_array[current_child_index] > this->_heap_array[largest_child_index])
-            {
-                largest_child_index = current_child_index;
-            }
-        }
-
-        return largest_child_index;
-    }
-
-    void update_max_parent_index()
-    {
-        this->_max_parent_index = this->get_parent_index(HeapArraySize - 1);
-    }
-
-    bool verify_max_heap()
-    {
-        for (size_t index = 0; index < this->_max_parent_index; index++)
-        {
-            size_t left_child_index = this->get_left_child_index(index);
-            size_t right_child_index = left_child_index + this->_num_of_children - 1;
-            if (right_child_index > HeapArraySize - 1)
-            {
-                right_child_index = HeapArraySize - 1;
-            }
-
-            for (size_t current_child_index = left_child_index; current_child_index < right_child_index + 1; current_child_index++)
-            {
-                if (this->_heap_array[current_child_index] > this->_heap_array[index])
-                {
-                    printf("wow! error at %zu, %zu\n", index, current_child_index);
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    size_t (&_heap_array)[HeapArraySize];
-    size_t _current_heap_size;
-    size_t _num_of_children;
-    size_t _max_parent_index;
-};
 
 template<unsigned int ArraySize>
-void rand_num_array_generator(size_t (&empty_array)[ArraySize], int min_value, int max_value)
+void random_number_array_generator(size_t (&empty_array)[ArraySize], int min_value, int max_value)
 {   
     size_t i = 0;
     int range = max_value - min_value + 1;
@@ -174,29 +27,48 @@ void rand_num_array_generator(size_t (&empty_array)[ArraySize], int min_value, i
 }
 
 
-// Reset the counters for the assignment. Will be used after every heap sort check.
-void reset_counts()
-{
-    num_comparisons = 0;
-    num_copies = 0;
-}
-
-
 int main()
 {
     srand(unsigned(time(0)));
-    size_t series_A[50] = { 0 }; 
-    size_t series_B[100] = { 0 }; 
-    size_t series_C[200] = { 0 }; 
+    size_t series_A[A_SIZE] = { 0 }; 
+    size_t series_B[B_SIZE] = { 0 }; 
+    size_t series_C[C_SIZE] = { 0 }; 
 
-    rand_num_array_generator(series_A, MIN_VAL, MAX_VAL);
-    rand_num_array_generator(series_B, MIN_VAL, MAX_VAL);
-    rand_num_array_generator(series_C, MIN_VAL, MAX_VAL);
+    random_number_array_generator(series_A, MIN_VAL, MAX_VAL);
+    random_number_array_generator(series_B, MIN_VAL, MAX_VAL);
+    random_number_array_generator(series_C, MIN_VAL, MAX_VAL);
 
-    HeapSorter<50> heapy = HeapSorter<50>(2, series_A);
-    heapy.print_heap();
-    heapy.build_max_heap();
-    heapy.print_heap();
+    HeapSorter<A_SIZE> heap_sorter_A = HeapSorter<A_SIZE>(2);
+    HeapSorter<B_SIZE> heap_sorter_B = HeapSorter<B_SIZE>(2);
+    HeapSorter<C_SIZE> heap_sorter_C = HeapSorter<C_SIZE>(2);
+
+
+    // const auto matching_heap_sorters_series_letters = std::array{std::make_tuple(std::ref(heap_sorter_A), series_A, 'A'), std::make_tuple(std::ref(heap_sorter_B), series_B, 'B'), std::make_tuple(std::ref(heap_sorter_C), series_C, 'C'),};
+    size_t num_of_children;
+    char series_char = 'A';
+
+    printf("For Series %c\n", series_char);
+    printf("===============\n");
+    for (num_of_children = MIN_NUM_CHILDREN; num_of_children < MAX_NUM_CHILDREN + 1; num_of_children++)
+    {
+        heap_sorter_C.heap_sort(num_of_children, series_C);
+        printf("for d = %zu:\n", num_of_children);
+        printf("comparisons: %zu, copies: %zu\n", heap_sorter_C.get_comparisons(), heap_sorter_C.get_copies());
+    }
+    printf("===============\n");
+
+
+    // for (const auto& [heap_sorter, series, letter] : matching_heap_sorters_series_letters)
+    // {
+    //     printf("For Series %c\n", letter);
+    //     printf("===============\n");
+    //     for (num_of_children = MIN_NUM_CHILDREN; num_of_children < MAX_NUM_CHILDREN; num_of_children++)
+    //     {
+    //         heap_sorter.heap_sort(num_of_children, series);
+    //         printf("for d = %zu:\n", num_of_children);
+    //         printf("comparisons: %zu, copies: %zu\n", heap_sorter.get_comparisons(), heap_sorter.get_copies());
+    //     }
+    //     printf("===============\n");
+    // }
     printf("\n");
-    printf("peniss\n");
 }
