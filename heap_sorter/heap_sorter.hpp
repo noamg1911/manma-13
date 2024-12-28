@@ -65,12 +65,17 @@ public:
     {
         size_t largest_child_index = this->get_index_of_largest_child(index);
 
+        if (largest_child_index == index)
+        {
+            return;
+        }
+
+        this->_num_comparisons++;
         if (this->_heap_array[largest_child_index] > this->_heap_array[index])
         {
             this->swap_values(index, largest_child_index);
             this->max_heapify(largest_child_index);
         }
-        this->_num_comparisons++;
     }
 
     /*
@@ -197,11 +202,11 @@ private:
 
         for (size_t current_child_index = left_child_index + 1; current_child_index < left_child_index + this->_num_of_children && current_child_index < this->_current_heap_size; current_child_index++)
         {
+            this->_num_comparisons++;
             if (this->_heap_array[current_child_index] > this->_heap_array[largest_child_index])
             {
                 largest_child_index = current_child_index;
             }
-            this->_num_comparisons++;
         }
 
         return largest_child_index;
